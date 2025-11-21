@@ -1,0 +1,62 @@
+# EPak Tool - Git Ignore File
+# Prevents committing sensitive credentials and temporary files
+
+# Credential files
+.epak-config
+.epak-config.json
+.my.cnf
+
+# SQL files (may contain sensitive data)
+*.sql
+rollback_*.sql
+epak_*.sql
+
+# Temporary files
+/tmp/
+*.tmp
+*.temp
+
+# Log files
+*.log
+
+# Batch processing files (may contain sensitive data)
+*.csv
+*.tsv
+*.txt
+!README.txt
+!windows/README.md
+!README.md
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Database dumps
+*.dump
+*.backup.sql
+
+
+
+
+
+
+
+

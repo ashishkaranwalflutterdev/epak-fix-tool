@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EPak Fix Tool - Web Terminal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #000;
+            color: #ffffff;
+            font-family: 'Courier New', Courier, monospace;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #terminal-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        #header {
+            background-color: #000;
+            padding: 10px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        #header h1 {
+            font-size: 14px;
+            margin-bottom: 5px;
+            color: #888;
+            font-weight: normal;
+        }
+
+        #header .status {
+            font-size: 12px;
+            color: #666;
+        }
+
+        #header .status.connected {
+            color: #00ff00;
+        }
+
+        #terminal {
+            flex: 1;
+            background-color: #000;
+            padding: 0;
+            overflow-y: auto;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        #input-area {
+            background-color: #000;
+            padding: 10px 0;
+            display: flex;
+            gap: 10px;
+        }
+
+        #command-input {
+            flex: 1;
+            background-color: #000;
+            color: #ffffff;
+            border: none;
+            border-bottom: 1px solid #444;
+            padding: 5px 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            outline: none;
+        }
+
+        #command-input:focus {
+            border-bottom: 1px solid #00ff00;
+        }
+        
+        #command-input::placeholder {
+            color: #666;
+        }
+
+        button {
+            background-color: #000;
+            color: #888;
+            border: 1px solid #444;
+            padding: 5px 15px;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: normal;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #222;
+            color: #fff;
+            border-color: #666;
+        }
+
+        button:active {
+            background-color: #333;
+            color: #fff;
+        }
+
+        .line {
+            margin-bottom: 5px;
+            word-wrap: break-word;
+            color: #ffffff;
+        }
+
+        .prompt {
+            color: #888;
+        }
+
+        .error {
+            color: #ff0000;
+        }
+
+        .success {
+            color: #00ff00;
+        }
+
+        .warning {
+            color: #ffff00;
+        }
+
+        .info {
+            color: #00aaff;
+        }
+        
+        .blue {
+            color: #5588ff;
+        }
+        
+        .bold {
+            font-weight: bold;
+        }
+
+        .table {
+            margin: 10px 0;
+            border-collapse: collapse;
+        }
+
+        .table td {
+            padding: 5px 10px;
+            border: 1px solid #00ff00;
+        }
+
+        .help-section {
+            margin: 10px 0;
+            padding: 10px;
+            border-left: 3px solid #00ff00;
+            background-color: #1a1a1a;
+        }
+
+        #loading {
+            display: none;
+            color: #ffaa00;
+        }
+
+        #loading.show {
+            display: inline;
+        }
+
+        .cursor {
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div id="terminal-container">
+        <div id="header">
+            <h1>EPak Fix Tool</h1>
+            <div class="status" id="status">Not connected</div>
+        </div>
+
+        <div id="terminal"></div>
+
+        <div id="input-area">
+            <span style="color: #00ff00; margin-right: 10px; font-weight: bold;">$</span>
+            <input 
+                type="text" 
+                id="command-input" 
+                placeholder="Enter command or type 'batch' to upload CSV..." 
+                autocomplete="off"
+            />
+            <button id="execute-btn">Run</button>
+            <button id="clear-btn">Clear</button>
+            <button id="batch-btn">Batch File</button>
+            <button id="cert-btn">Certificate</button>
+        </div>
+        <input type="file" id="file-input" accept=".csv,.txt,.tsv,.xlsx,.xls" style="display: none;" />
+        <input type="file" id="cert-input" accept=".cer,.crt,.pem,.pdf" style="display: none;" />
+    </div>
+
+    <script src="terminal.js"></script>
+</body>
+</html>
+
