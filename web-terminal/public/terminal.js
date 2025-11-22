@@ -10,7 +10,8 @@ const state = {
     opDescriptions: [],
     history: [],
     historyIndex: -1,
-    currentBatchName: null // Track current batch for auto-move to processed
+    currentBatchName: null, // Track current batch for auto-move to processed
+    awaitingPrompt: false // Flag to prevent command execution during prompts
 };
 
 // DOM elements
@@ -1416,6 +1417,10 @@ executeBtn.addEventListener('click', () => {
 
 commandInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
+        // Skip if we're awaiting a prompt response
+        if (state.awaitingPrompt) {
+            return;
+        }
         const cmd = commandInput.value;
         executeCommand(cmd);
         commandInput.value = '';
@@ -1793,11 +1798,15 @@ async function processBatchEpaks(epakOperations) {
 function promptUser(message) {
     return new Promise((resolve) => {
         print(message, 'warning');
+        state.awaitingPrompt = true; // Set flag to prevent command execution
         const handler = (e) => {
             if (e.key === 'Enter') {
+                e.preventDefault();
+                e.stopPropagation();
                 const value = commandInput.value.trim();
                 commandInput.value = '';
                 commandInput.removeEventListener('keydown', handler);
+                state.awaitingPrompt = false; // Clear flag
                 resolve(value || '1'); // Default to option 1
             }
         };
