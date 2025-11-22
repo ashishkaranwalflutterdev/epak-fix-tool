@@ -25,3 +25,5 @@ echo ""
 cd /Users/ashishkaranwal/Documents/dev/projects/epak-tool/web-terminal
 npm start
 
+
+

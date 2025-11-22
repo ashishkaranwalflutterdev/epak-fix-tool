@@ -1310,12 +1310,84 @@ async function loadAndExecuteFixSheet(fixSheetPath) {
             epakOperations[op.epakId].push(op);
         });
         
+        // Ask if user wants to export SQL for CMR
+        print('');
+        printSection('Export SQL for CMR?');
+        print('');
+        print('Options:');
+        print('1. Export SQL to file (for CMR/review)');
+        print('2. Continue to execution');
+        print('');
+        const exportChoice = await promptUser('Choose [1-2]: ');
+        
+        if (exportChoice === '1') {
+            await exportBatchSQL(epakOperations, state.currentBatchName || 'batch');
+            state.currentBatchName = null;
+            return;
+        }
+        
         // Process each ePak
         await processBatchEpaks(epakOperations);
         
     } catch (error) {
         printError('Failed to load fix sheet: ' + error.message);
         state.currentBatchName = null;
+    }
+}
+
+async function exportBatchSQL(epakOperations, batchName) {
+    try {
+        printInfo('Generating SQL export file...');
+        
+        // Build simple SQL content - just queries
+        let sqlContent = '';
+        sqlContent += `-- EPak Batch SQL Export: ${batchName}\n`;
+        sqlContent += `-- Generated: ${new Date().toLocaleString()}\n`;
+        sqlContent += `-- Total EPaks: ${Object.keys(epakOperations).length}\n`;
+        sqlContent += `-- Total Operations: ${Object.values(epakOperations).flat().length}\n\n`;
+        
+        let epakCount = 0;
+        for (const [epakId, operations] of Object.entries(epakOperations)) {
+            epakCount++;
+            sqlContent += `-- EPak ${epakCount}: ${epakId}\n\n`;
+            
+            operations.forEach((op) => {
+                sqlContent += `${op.sql};\n`;
+            });
+            
+            sqlContent += `\n`;
+        }
+        
+        // Send to server to save
+        const response = await fetch('/api/export-batch-sql', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                batchName: batchName,
+                sqlContent: sqlContent
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            print('');
+            printSuccess('✅ SQL exported successfully!');
+            print('');
+            print(`📄 File: ${data.filePath}`);
+            print('');
+            printInfo('This file contains all SQL queries for:');
+            print(`   - ${epakCount} EPak(s)`);
+            print(`   - ${Object.values(epakOperations).flat().length} operation(s)`);
+            print('');
+        } else {
+            printError('Failed to export SQL: ' + data.error);
+        }
+        
+    } catch (error) {
+        printError('Failed to export SQL: ' + error.message);
     }
 }
 

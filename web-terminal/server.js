@@ -962,6 +962,49 @@ app.post('/api/batch/complete/:batchName', async (req, res) => {
     }
 });
 
+// Export batch SQL to file (for CMR)
+app.post('/api/export-batch-sql', async (req, res) => {
+    try {
+        const { batchName, sqlContent } = req.body;
+        
+        if (!batchName || !sqlContent) {
+            return res.status(400).json({
+                success: false,
+                error: 'Batch name and SQL content are required'
+            });
+        }
+        
+        // Create exports directory if it doesn't exist
+        const exportsDir = path.join(__dirname, 'batch-job-sheets');
+        if (!fs.existsSync(exportsDir)) {
+            fs.mkdirSync(exportsDir, { recursive: true });
+        }
+        
+        // Generate filename with timestamp
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+        const filename = `${batchName}-SQL-Export-${timestamp}.txt`;
+        const filePath = path.join(exportsDir, filename);
+        
+        // Write SQL content to file
+        fs.writeFileSync(filePath, sqlContent, 'utf8');
+        
+        console.log(`SQL exported to: ${filePath}`);
+        
+        res.json({
+            success: true,
+            filePath: filePath,
+            filename: filename
+        });
+        
+    } catch (error) {
+        console.error('SQL export error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
 // Read and parse a fix sheet file
 app.post('/api/read-fix-sheet', async (req, res) => {
     try {
