@@ -1337,8 +1337,6 @@ async function loadAndExecuteFixSheet(fixSheetPath) {
 
 async function exportBatchSQL(epakOperations, batchName) {
     try {
-        printInfo('Generating SQL export file...');
-        
         // Build simple SQL content - just queries
         let sqlContent = '';
         sqlContent += `-- EPak Batch SQL Export: ${batchName}\n`;
@@ -1373,15 +1371,7 @@ async function exportBatchSQL(epakOperations, batchName) {
         const data = await response.json();
         
         if (data.success) {
-            print('');
-            printSuccess('✅ SQL exported successfully!');
-            print('');
-            print(`📄 File: ${data.filePath}`);
-            print('');
-            printInfo('This file contains all SQL queries for:');
-            print(`   - ${epakCount} EPak(s)`);
-            print(`   - ${Object.values(epakOperations).flat().length} operation(s)`);
-            print('');
+            printSuccess(`✅ SQL exported: ${data.filePath}`);
         } else {
             printError('Failed to export SQL: ' + data.error);
         }
