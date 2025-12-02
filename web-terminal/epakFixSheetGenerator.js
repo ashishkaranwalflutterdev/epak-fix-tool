@@ -503,8 +503,8 @@ class EpakFixSheetGenerator {
             const user = signer.userDetails;
             const deviceInfo = signer.deviceInfo || {};
             
-            // Build Aadhaar details JSON (escaped for SQL)
-            const aadhaarDetailsJson = JSON.stringify({
+            // Build Aadhaar details as a JSON string (will be nested in comments)
+            const aadhaarDetailsStr = JSON.stringify({
                 signerName: aadhaarData.signerName,
                 pincode: aadhaarData.pincode,
                 state: aadhaarData.state,
@@ -515,19 +515,45 @@ class EpakFixSheetGenerator {
                 issuerOrganisation: aadhaarData.issuerOrganisation,
                 endDate: aadhaarData.endDate,
                 tpin: aadhaarData.tpin
-            }).replace(/"/g, '\\"');
+            });
             
-            // Build comments JSON with all required fields (using actual device info from DB)
-            const commentsJson = JSON.stringify({
+            // Build comments JSON with aadhaarDetails as a nested JSON string
+            const commentsObj = {
                 signReason: "I agree to the terms defined by the placement of my signature on this document.",
-                aadhaarDetails: aadhaarDetailsJson,
+                aadhaarDetails: aadhaarDetailsStr, // This will be a JSON string inside the outer JSON
                 signingPolicy: "Aadhaar",
                 browser: deviceInfo.browser || "MANUAL",
                 signConsent: "I agree that my digital signature is the legally binding equivalent to my handwritten signature. I will not, at any time in the future, repudiate the meaning of my digital signature or claim that my digital signature does not have the same validity and meaning as my handwritten signature. I understand that I am accountable and responsible for all actions associated with my digital Signature.",
                 userIp: deviceInfo.userIp || "MANUAL",
                 device: deviceInfo.device || "MANUAL",
                 platform: deviceInfo.platform || "MANUAL"
-            }).replace(/"/g, '\\"');
+            };
+            
+            /**
+             * SQL JSON Escaping Rules for Nested JSON:
+             * 
+             * IMPORTANT: This escaping handles nested JSON strings correctly for MySQL.
+             * 
+             * The comments field contains a JSON object where aadhaarDetails is a JSON STRING (not object).
+             * When preparing for SQL INSERT, we need different escape levels:
+             * 
+             * 1. Outer JSON quotes → \" (single backslash + quote)
+             * 2. Nested JSON string quotes (inside aadhaarDetails) → \\" (double backslash + quote)
+             * 
+             * CORRECT OUTPUT:
+             * {"signReason":"...","aadhaarDetails":"{\"signerName\":\"John\"}","signingPolicy":"Aadhaar"}
+             * 
+             * INCORRECT (causes MySQL json_extract errors):
+             * {"signReason":"...","aadhaarDetails":"{\\"signerName\\":\\"John\\"}","signingPolicy":"Aadhaar"}
+             * 
+             * The transformation works as follows:
+             * 1. JSON.stringify(commentsObj) creates: {"key":"value","aadhaarDetails":"{\"nested\":\"value\"}"}
+             * 2. replace(/\\"/g, '\\\\"') converts \" → \\" for nested JSON strings
+             * 3. replace(/"/g, '\\"') converts " → \" for outer JSON structure
+             * 
+             * DO NOT use .replace(/"/g, '\\"') alone - it creates wrong escaping for nested JSON!
+             */
+            const commentsJson = JSON.stringify(commentsObj).replace(/\\"/g, '\\\\"').replace(/"/g, '\\"');
             
             // Extract document name from filePath
             const filePath = currentState.document?.filePath || '';
